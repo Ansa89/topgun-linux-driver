@@ -12,3 +12,12 @@ Thumbs.db
 # Vim
 *.swp
 *.~
+
+# Compilation output
+*.o
+.tmp*
+.lcdtopgun*
+lcdtopgun.ko
+lcdtopgun.mod*
+Module.symvers
+modules.order
