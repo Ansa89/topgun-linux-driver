@@ -6,25 +6,6 @@
  *
  *  Based on GunCon2 linux driver by Brian Goines
  *  and the Xpad linux driver by Marko Friedemann
- *
- *  History:
- *
- *  2012-07-24 - 0.3.2: (Ansa89) Add "err" macro
- *   - Added the "err" macro since it was missing on linux 3.5.
- *   - Tested up to linux kernel 3.5.
- *
- *  2011-11-30 - 0.3.1: (Ansa89) Fix "info" macro
- *   - Rewrote the "info" macro (for aesthetics reasons).
- *   - Use "printk" instead of "info" in "usb_topgun_init()".
- *   - Tested up to linux kernel 3.1.4.
- *
- *  2011-11-17 - 0.3: (Ansa89) General update
- *   - Compiles and runs on newer kernels (tested up to 3.1.1).
- *
- *  2008-04-14 - 0.2: (Adolfo R. Brandes) General update
- *   - Compiles and runs on newer kernels (tested up to 2.6.24).
- *   - Rewrote the setting of bits, based on xpad360.
- *   - Added module option debug=1.
  */
 
 /*
