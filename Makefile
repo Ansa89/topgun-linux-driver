@@ -11,6 +11,7 @@ clean:
 	rm -f lcdtopgun.o lcdtopgun.ko
 	rm -f lcdtopgun.mod.c lcdtopgun.mod.o
 	rm -f Module.symvers
+	rm -f modules.order
 	rm -f .lcdtopgun*
 	rm -fr .tmp_versions
 

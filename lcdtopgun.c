@@ -9,6 +9,9 @@
  *
  *  History:
  *
+ *  2011-11-17 - 0.3: (Ansa89) General update
+ *   - Compiles and runs on newer kernels (tested up to 3.1.1).
+ *
  *  2008-04-14 - 0.2: (Adolfo R. Brandes) General update
  *   - Compiles and runs on newer kernels (tested up to 2.6.24).
  *   - Rewrote the setting of bits, based on xpad360.
@@ -18,7 +21,7 @@
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or 
+ * the Free Software Foundation; either version 3 of the License, or 
  * (at your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful,
@@ -54,10 +57,15 @@ MODULE_PARM_DESC(debug, "Debugging");
 /*
  * Version Information
  */
-#define DRIVER_VERSION "v0.2"
+#define DRIVER_VERSION "v0.3"
 #define DRIVER_AUTHOR "Christophe Thibault <chris@aegis-corp.org>"
 #define DRIVER_DESC "USB EMS LCD TopGun driver"
 #define DRIVER_LICENSE "GPL"
+
+/*
+ * Missing macro (at least on linux >= 3.0)
+ */
+#define info(format, arg...) printk(KERN_INFO "%s: " format "\n" , __FILE__ , ## arg)
 
 MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);
@@ -167,7 +175,7 @@ resubmit:
 
 static int usb_topgun_open(struct input_dev *dev)
 {
-	struct usb_topgun *topgun = dev->private;
+	struct usb_topgun *topgun = input_get_drvdata(dev);
 	int status;
 
 	if (topgun->open++)
@@ -185,7 +193,7 @@ static int usb_topgun_open(struct input_dev *dev)
 
 static void usb_topgun_close(struct input_dev *dev)
 {
-	struct usb_topgun *topgun = dev->private;
+	struct usb_topgun *topgun = input_get_drvdata(dev);
 
 	if (!--topgun->open)
 		usb_unlink_urb(topgun->irq);
@@ -198,7 +206,7 @@ static int usb_topgun_probe(struct usb_interface *intf, const struct usb_device_
 	struct input_dev *input_dev;
 	struct usb_endpoint_descriptor *endpoint;
 	struct usb_host_interface *interface;
-	int pipe, maxp, i;
+	int pipe, maxp, i, ret_reg;
 	char path[64];
 	char *buf;
 
@@ -224,7 +232,7 @@ static int usb_topgun_probe(struct usb_interface *intf, const struct usb_device_
 		return -ENOMEM;
 	}
 
-	topgun->data = usb_buffer_alloc(usbdev, 8, GFP_ATOMIC, &topgun->data_dma);
+	topgun->data = usb_alloc_coherent(usbdev, 8, GFP_ATOMIC, &topgun->data_dma);
 	if (!topgun->data) {
 		input_free_device(input_dev);
 		kfree(topgun);
@@ -233,7 +241,7 @@ static int usb_topgun_probe(struct usb_interface *intf, const struct usb_device_
 
 	topgun->irq = usb_alloc_urb(0, GFP_KERNEL);
 	if (!topgun->irq) {
-		usb_buffer_free(usbdev, 8, topgun->data, topgun->data_dma);
+		usb_free_coherent(usbdev, 8, topgun->data, topgun->data_dma);
 		input_free_device(input_dev);
 		kfree(topgun);
 		return -ENODEV;
@@ -264,14 +272,13 @@ static int usb_topgun_probe(struct usb_interface *intf, const struct usb_device_
 	input_dev->name = topgun->name;
 	input_dev->phys = topgun->phys;
 	usb_to_input_id(usbdev, &input_dev->id);
-	input_dev->cdev.dev = &intf->dev;
-	input_dev->private = topgun;
+	input_set_drvdata(input_dev, topgun);
 	input_dev->open = usb_topgun_open;
 	input_dev->close = usb_topgun_close;
 
 	/* Start name manipulation. */
 	if (!(buf = kmalloc(63, GFP_KERNEL))) {
-		usb_buffer_free(usbdev, 8, topgun->data, topgun->data_dma);
+		usb_free_coherent(usbdev, 8, topgun->data, topgun->data_dma);
 		kfree(topgun);
 		return -ENOMEM;
 	}
@@ -297,7 +304,7 @@ static int usb_topgun_probe(struct usb_interface *intf, const struct usb_device_
 	topgun->irq->transfer_dma = topgun->data_dma;
 	topgun->irq->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 
-	input_register_device(topgun->dev);
+	ret_reg = input_register_device(topgun->dev);
 
 	if (debug)
 		printk(KERN_INFO "input: %s on %s\n", topgun->name, path);
@@ -316,7 +323,7 @@ static void usb_topgun_disconnect(struct usb_interface *intf)
 		usb_unlink_urb(topgun->irq);
 		input_unregister_device(topgun->dev);
 		usb_free_urb(topgun->irq);
-		usb_buffer_free(interface_to_usbdev(intf), 8, topgun->data, topgun->data_dma);
+		usb_free_coherent(interface_to_usbdev(intf), 8, topgun->data, topgun->data_dma);
 		kfree(topgun);
 	}
 }
