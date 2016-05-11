@@ -9,13 +9,18 @@
  *
  *  History:
  *
+ *  2011-11-30 - 0.3.1: (Ansa89) Fix "info" macro
+ *   - Rewrote the "info" macro (for aesthetics reasons).
+ *   - Use "printk" instead of "info" in "usb_topgun_init()".
+ *   - Tested up to linux kernel 3.1.4.
+ *
  *  2011-11-17 - 0.3: (Ansa89) General update
  *   - Compiles and runs on newer kernels (tested up to 3.1.1).
  *
  *  2008-04-14 - 0.2: (Adolfo R. Brandes) General update
  *   - Compiles and runs on newer kernels (tested up to 2.6.24).
  *   - Rewrote the setting of bits, based on xpad360.
- *   - Added module option debug=1
+ *   - Added module option debug=1.
  */
 
 /*
@@ -57,7 +62,7 @@ MODULE_PARM_DESC(debug, "Debugging");
 /*
  * Version Information
  */
-#define DRIVER_VERSION "v0.3"
+#define DRIVER_VERSION "v0.3.1"
 #define DRIVER_AUTHOR "Christophe Thibault <chris@aegis-corp.org>"
 #define DRIVER_DESC "USB EMS LCD TopGun driver"
 #define DRIVER_LICENSE "GPL"
@@ -65,7 +70,7 @@ MODULE_PARM_DESC(debug, "Debugging");
 /*
  * Missing macro (at least on linux >= 3.0)
  */
-#define info(format, arg...) printk(KERN_INFO "%s: " format "\n" , __FILE__ , ## arg)
+#define info(format, arg...) printk(KERN_INFO format "\n" , ## arg)
 
 MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);
@@ -132,7 +137,7 @@ static void usb_topgun_irq(struct urb *urb
 #endif
 
 	if (debug) {
-		printk(KERN_INFO "topgun_debug: data :");
+		printk(KERN_INFO "lcdtopgun_debug: data :");
 		for(i = 0; i < 20; i++) {
 			printk("0x%02x ", data[i]);
 		}
@@ -339,7 +344,7 @@ static int __init usb_topgun_init(void)
 {
 	int retval = usb_register(&usb_topgun_driver);
 	if (retval == 0) 
-		info(DRIVER_DESC " " DRIVER_VERSION " initialized" );
+		printk(KERN_INFO "%s: " DRIVER_DESC " " DRIVER_VERSION " initialized\n" , usb_topgun_driver.name);
 	return retval;
 }
 
