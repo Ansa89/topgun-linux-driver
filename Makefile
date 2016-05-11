@@ -1,21 +1,18 @@
-TOPDIR          := /usr/src/linux
-MOD_ROOT        :=
-PWD             := $(shell pwd)
+PWD   := $(shell pwd)
+KVER  ?= $(shell uname -r)
+KDIR  := /lib/modules/$(KVER)/build
+obj-m := lcdtopgun.o
 
-obj-m           := lcdtopgun.o
+lcdtopgun.ko:
+	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 
-default:
-	$(MAKE) -C $(TOPDIR) SUBDIRS=$(PWD) modules
+.PHONY: all clean install
+
+all: lcdtopgun.ko
 
 clean:
-	rm -f lcdtopgun.o lcdtopgun.ko
-	rm -f lcdtopgun.mod.c lcdtopgun.mod.o
-	rm -f Module.symvers
-	rm -f modules.order
-	rm -f .lcdtopgun*
-	rm -fr .tmp_versions
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
-install:
-	$(MAKE) -C $(TOPDIR) SUBDIRS=$(PWD) modules_install
-	depmod -ae
-
+install: lcdtopgun.ko
+	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules_install
+	depmod -F$(KDIR)/System.map -ae $(KVER)

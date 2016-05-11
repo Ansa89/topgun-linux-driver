@@ -9,6 +9,10 @@
  *
  *  History:
  *
+ *  2012-07-24 - 0.3.2: (Ansa89) Add "err" macro
+ *   - Added the "err" macro since it was missing on linux 3.5.
+ *   - Tested up to linux kernel 3.5.
+ *
  *  2011-11-30 - 0.3.1: (Ansa89) Fix "info" macro
  *   - Rewrote the "info" macro (for aesthetics reasons).
  *   - Use "printk" instead of "info" in "usb_topgun_init()".
@@ -62,15 +66,18 @@ MODULE_PARM_DESC(debug, "Debugging");
 /*
  * Version Information
  */
-#define DRIVER_VERSION "v0.3.1"
+#define DRIVER_VERSION "v0.3.2"
 #define DRIVER_AUTHOR "Christophe Thibault <chris@aegis-corp.org>"
 #define DRIVER_DESC "USB EMS LCD TopGun driver"
 #define DRIVER_LICENSE "GPL"
 
 /*
- * Missing macro (at least on linux >= 3.0)
+ * Missing macro (at least on linux >= 3.5)
  */
-#define info(format, arg...) printk(KERN_INFO format "\n" , ## arg)
+#define info(format, arg...) \
+	printk(KERN_INFO format "\n" , ## arg)
+#define err(format, arg...) \
+	printk(KERN_ERR KBUILD_MODNAME ": " format "\n", ##arg)
 
 MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);
@@ -344,6 +351,7 @@ static int __init usb_topgun_init(void)
 {
 	int retval = usb_register(&usb_topgun_driver);
 	if (retval == 0) 
+//		info(DRIVER_DESC " " DRIVER_VERSION " initialized" );
 		printk(KERN_INFO "%s: " DRIVER_DESC " " DRIVER_VERSION " initialized\n" , usb_topgun_driver.name);
 	return retval;
 }
